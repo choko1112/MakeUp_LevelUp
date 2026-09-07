@@ -6,3 +6,7 @@ __pycache__/
 .env.local
 .vercel/
 .DS_Store
+
+# local working files
+TODO.md
+.claude/
