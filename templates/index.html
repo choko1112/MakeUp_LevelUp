@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="毎日の目標、TODO、活動日記をまとめて振り返る自己研鑽ダッシュボード" />
+    <meta name="theme-color" content="#f7f5ee" />
+    <title>StepLog | 今日の一歩を積み重ねる</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}" />
+    <script src="{{ url_for('static', path='/js/app.js') }}" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">メインコンテンツへ</a>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="StepLog ホーム"><span class="brand-mark" aria-hidden="true">S</span><span>StepLog</span></a>
+      <nav class="main-nav" aria-label="メインナビゲーション">
+        <a class="active" href="#today">今日</a><a href="#todos">TODO</a><a href="#journal">活動日記</a>
+      </nav>
+      <div class="header-actions"><span class="streak"><span aria-hidden="true">●</span> 3日継続中</span><button class="avatar" type="button" aria-label="プロフィール（準備中）">MK</button></div>
+    </header>
+
+    <main id="main-content" class="page-shell">
+      <section class="welcome" aria-labelledby="welcome-title">
+        <div><p class="eyebrow" id="today-label">TODAY</p><h1 id="welcome-title">おはようございます。<br />今日も一歩、前へ。</h1></div>
+        <div class="date-card" aria-label="今日の日付"><span id="month-label">9月</span><strong id="day-label">7</strong><span id="weekday-label">月曜日</span></div>
+      </section>
+
+      <section id="today" class="focus-card panel" aria-labelledby="focus-title">
+        <div class="section-heading"><div class="heading-icon sun-icon" aria-hidden="true">✦</div><div><p class="eyebrow">ONE THING</p><h2 id="focus-title">今日のフォーカス</h2></div></div>
+        <p class="section-description">今日いちばん頑張りたいことを、ひとつだけ決めましょう。</p>
+        <form id="focus-form" class="focus-form">
+          <label class="sr-only" for="focus-input">今日頑張りたいこと</label>
+          <input id="focus-input" maxlength="100" placeholder="例：Pythonのチュートリアルを30分進める" autocomplete="off" />
+          <button class="button button-dark" type="submit">決める <span aria-hidden="true">→</span></button>
+        </form>
+        <div id="focus-result" class="focus-result" hidden>
+          <button id="focus-check" class="round-check" type="button" aria-label="今日の目標を完了にする"></button>
+          <div><span>今日の目標</span><strong id="focus-text"></strong></div>
+          <button id="focus-edit" class="text-button" type="button">変更</button>
+        </div>
+      </section>
+
+      <div class="dashboard-grid">
+        <section id="todos" class="panel todos-panel" aria-labelledby="todo-title">
+          <div class="section-heading compact"><div class="heading-icon check-icon" aria-hidden="true">✓</div><div><p class="eyebrow">TASKS</p><h2 id="todo-title">TODO</h2></div><span id="todo-count" class="count-badge">0件</span></div>
+          <form id="todo-form" class="inline-form"><label class="sr-only" for="todo-input">新しいTODO</label><input id="todo-input" maxlength="80" placeholder="やることを追加" autocomplete="off" /><button type="submit" aria-label="TODOを追加">＋</button></form>
+          <ul id="todo-list" class="todo-list" aria-live="polite"></ul>
+          <div id="todo-empty" class="empty-state"><span aria-hidden="true">○</span><p>TODOはまだありません</p><small>上の欄から、次にやることを追加できます。</small></div>
+        </section>
+
+        <section class="panel advice-panel" aria-labelledby="advice-title">
+          <div class="section-heading compact"><div class="heading-icon spark-icon" aria-hidden="true">✦</div><div><p class="eyebrow">AI COACH</p><h2 id="advice-title">AIからのアドバイス</h2></div><span class="beta-badge">BETA</span></div>
+          <div class="advice-content"><div class="orb" aria-hidden="true"><span>✦</span></div><p>今日の目標とTODOをもとに、取り組み方のヒントをお届けします。</p><button id="advice-button" class="button button-outline" type="button">アドバイスをもらう</button><p id="advice-note" class="advice-note" role="status"></p></div>
+        </section>
+      </div>
+
+      <section id="journal" class="panel journal-panel" aria-labelledby="journal-title">
+        <div class="section-heading compact"><div class="heading-icon book-icon" aria-hidden="true">▤</div><div><p class="eyebrow">JOURNAL</p><h2 id="journal-title">今日の活動日記</h2></div><span id="save-status" class="save-status" role="status">未入力</span></div>
+        <label class="sr-only" for="journal-input">今日の学びや気づき</label>
+        <textarea id="journal-input" maxlength="1000" placeholder="今日取り組んだこと、学んだこと、明日につなげたい気づきを自由に書いてみましょう。"></textarea>
+        <div class="journal-footer"><span id="character-count">0 / 1000</span><button id="journal-save" class="button button-dark" type="button">日記を保存</button></div>
+      </section>
+    </main>
+
+    <footer><p>Small steps, meaningful growth.</p><span>StepLog</span></footer>
+  </body>
+</html>
