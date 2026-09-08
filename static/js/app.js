@@ -172,15 +172,21 @@ function showView() {
 
 const exchangeDialog = document.querySelector("#exchange-dialog");
 let pendingPrizeId = null;
+const editDialog = document.querySelector("#prize-edit-dialog");
+let editingPrizeId = null;
+
+function prizeTone(cost) {
+  return cost < 100 ? "mint" : cost < 500 ? "sky" : cost < 1000 ? "lavender" : "gold";
+}
 
 function renderPrizes() {
   document.querySelector("#point-balance").textContent = `${state.points.toLocaleString()} pt`;
   document.querySelector("#prize-empty").hidden = state.prizes.length > 0;
   const list = document.querySelector("#prize-list");
   list.replaceChildren();
-  state.prizes.forEach(prize => {
+  state.prizes.slice().sort((a, b) => a.cost - b.cost).forEach(prize => {
     const card = document.createElement("article");
-    card.className = "panel prize-card";
+    card.className = `panel prize-card prize-tone-${prizeTone(prize.cost)}`;
     const title = document.createElement("h3");
     title.textContent = prize.name;
     const cost = document.createElement("p");
@@ -196,24 +202,45 @@ function renderPrizes() {
       document.querySelector("#exchange-description").textContent = `${prize.name}と${prize.cost} ptで交換します。交換後の残高は${state.points - prize.cost} ptです。`;
       exchangeDialog.showModal();
     });
-    card.append(title, cost, button);
+    const edit = document.createElement("button");
+    edit.className = "button button-outline";
+    edit.type = "button";
+    edit.textContent = "編集";
+    edit.setAttribute("aria-label", `${prize.name}を編集`);
+    edit.addEventListener("click", () => {
+      editingPrizeId = prize.id;
+      document.querySelector("#prize-edit-name").value = prize.name;
+      document.querySelector("#prize-edit-cost").value = prize.cost;
+      editDialog.showModal();
+    });
+    const actions = document.createElement("div");
+    actions.className = "prize-actions";
+    actions.append(button, edit);
+    card.append(title, cost, actions);
     list.append(card);
   });
   const history = document.querySelector("#prize-history");
   history.replaceChildren();
   document.querySelector("#history-empty").hidden = state.exchanges.length > 0;
-  state.exchanges.slice().reverse().forEach(exchange => {
+  state.exchanges.slice().reverse().sort((a, b) => Number(a.used) - Number(b.used)).forEach(exchange => {
     const item = document.createElement("li");
-    item.className = "exchange-item";
+    item.className = `exchange-item ${exchange.used ? "exchange-used" : "exchange-unused"}`;
+    const details = document.createElement("div");
+    details.className = "exchange-details";
+    const badge = document.createElement("strong");
+    badge.className = "exchange-badge";
+    badge.textContent = exchange.used ? "✓ 使用済み" : "未使用 · これから楽しめる";
     const name = document.createElement("span");
     name.textContent = `${exchange.name} · ${exchange.cost} pt · ${new Date(exchange.date).toLocaleDateString("ja-JP")}`;
     const button = document.createElement("button");
-    button.className = "button button-outline";
+    button.className = "button button-dark";
     button.type = "button";
     button.textContent = exchange.used ? "使用済み" : "使った";
     button.disabled = exchange.used;
     button.addEventListener("click", () => { exchange.used = true; saveState(); renderPrizes(); });
-    item.append(name, button);
+    details.append(badge, name);
+    item.append(details);
+    if (!exchange.used) item.append(button);
     history.append(item);
   });
 }
@@ -227,6 +254,22 @@ document.querySelector("#prize-form").addEventListener("submit", event => {
   saveState();
   event.target.reset();
   renderPrizes();
+});
+
+document.querySelector("#prize-edit-cancel").addEventListener("click", () => editDialog.close());
+editDialog.addEventListener("close", () => { editingPrizeId = null; });
+document.querySelector("#prize-edit-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const prize = state.prizes.find(item => item.id === editingPrizeId);
+  const name = document.querySelector("#prize-edit-name").value.trim();
+  const cost = Number(document.querySelector("#prize-edit-cost").value);
+  if (!prize || !name || name.length > 80 || !Number.isSafeInteger(cost) || cost < 1 || cost > 1000000) return;
+  prize.name = name;
+  prize.cost = cost;
+  saveState();
+  editDialog.close();
+  renderPrizes();
+  document.querySelector("#reward-status").textContent = `${name}を更新しました。`;
 });
 
 exchangeDialog.addEventListener("close", () => {

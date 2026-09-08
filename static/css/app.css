@@ -29,10 +29,24 @@
 .prize-form label { flex: 1; min-width: 0; font-size: 13px; }
 .prize-form input { display: block; height: 44px; border-radius: 10px; padding: 10px; margin-top: 8px; }
 .prize-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px; }
-.prize-card { padding: 22px; overflow-wrap: anywhere; }
+.panel.prize-card { padding: 22px; overflow-wrap: anywhere; border: 1px solid var(--prize-edge); border-top: 5px solid var(--prize-edge); background: linear-gradient(140deg, var(--prize-tint), var(--surface) 80%); box-shadow: 0 8px 24px var(--prize-tint); }
+.prize-tone-mint { --prize-edge: #bddbc8; --prize-tint: #edf7ee; }
+.prize-tone-sky { --prize-edge: #bbd9e9; --prize-tint: #edf5fc; }
+.prize-tone-lavender { --prize-edge: #d5c4e8; --prize-tint: #f4edfa; }
+.prize-tone-gold { --prize-edge: #e6cf9e; --prize-tint: #fcf3df; }
+.prize-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.prize-edit-form { display: grid; gap: 18px; }
+.prize-edit-form label { font-size: 13px; }
+.prize-edit-form input { display: block; height: 44px; border-radius: 10px; padding: 10px; margin-top: 8px; }
 .prize-card h3 { margin-top: 0; }
 .prize-card p { color: #816329; font-size: 22px; }
-.exchange-item { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.exchange-item { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 20px; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; }
+.exchange-unused { background: #edf7ee; border: 2px solid #96b69c; border-left-width: 7px; }
+.exchange-used { background: #eeede9; border-style: dashed; color: #666960; }
+.exchange-details { display: grid; gap: 10px; min-width: 0; }
+.exchange-badge { font-size: 12px; width: fit-content; padding: 5px 10px; border-radius: 99px; }
+.exchange-unused .exchange-badge { background: #32593d; color: white; }
+.exchange-used .exchange-badge { background: #deded7; color: #50534c; }
 .exchange-item span { overflow-wrap: anywhere; min-width: 0; }
 .exchange-item button { flex-shrink: 0; }
 button:disabled { opacity: .55; cursor: default; transform: none !important; }
