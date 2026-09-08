@@ -172,8 +172,31 @@ function showView() {
 }
 
 const exchangeDialog = document.querySelector("#exchange-dialog");
-let pendingPrizeId = null;
-let pendingQuantity = 1;
+let pendingCart = [];
+const prizeQuantities = new Map();
+
+function selectedPrizes() {
+  return state.prizes.map(prize => ({ ...prize, quantity: prizeQuantities.get(prize.id) || 0 })).filter(prize => prize.quantity > 0);
+}
+
+function updateCart() {
+  const selected = selectedPrizes();
+  const total = selected.reduce((sum, prize) => sum + prize.cost * prize.quantity, 0);
+  const count = selected.reduce((sum, prize) => sum + prize.quantity, 0);
+  document.querySelector("#cart-summary").textContent = `${selected.length}種類・${count}個 / 合計 ${total.toLocaleString()} pt${total > state.points ? `（あと${(total - state.points).toLocaleString()} pt）` : ""}`;
+  document.querySelector("#cart-checkout").disabled = count === 0 || total > state.points;
+}
+
+document.querySelector("#cart-checkout").addEventListener("click", () => {
+  stopQuantityHold();
+  const selected = selectedPrizes();
+  const total = selected.reduce((sum, prize) => sum + prize.cost * prize.quantity, 0);
+  if (!selected.length || total > state.points) return;
+  pendingCart = selected;
+  exchangeDialog.returnValue = "";
+  document.querySelector("#exchange-description").textContent = selected.map(prize => `${prize.name} × ${prize.quantity}：${(prize.cost * prize.quantity).toLocaleString()} pt`).join("\n") + `\n\n合計 ${total.toLocaleString()} pt\n交換後の残高 ${(state.points - total).toLocaleString()} pt`;
+  exchangeDialog.showModal();
+});
 const editDialog = document.querySelector("#prize-edit-dialog");
 let editingPrizeId = null;
 const deleteDialog = document.querySelector("#prize-delete-dialog");
@@ -264,7 +287,7 @@ function renderPrizes() {
     const title = document.createElement("h3");
     title.textContent = prize.name;
     const cost = document.createElement("p");
-    let quantity = 1;
+    let quantity = prizeQuantities.get(prize.id) || 0;
     const priceRow = document.createElement("div");
     priceRow.className = "prize-price-row";
     const stepper = document.createElement("div");
@@ -280,29 +303,20 @@ function renderPrizes() {
     count.setAttribute("aria-live", "polite");
     stepper.append(minus, count, plus);
     priceRow.append(cost, stepper);
-    const button = document.createElement("button");
-    button.className = "button button-dark";
-    button.type = "button";
     function updateQuantity() {
-      const total = prize.cost * quantity;
-      cost.textContent = `${total.toLocaleString()} pt`;
-      cost.setAttribute("aria-label", `合計${total}ポイント、1個${prize.cost}ポイント`);
-      count.textContent = `${quantity}個`;
-      minus.disabled = quantity <= 1;
+      prizeQuantities.set(prize.id, quantity);
+      cost.textContent = `${prize.cost.toLocaleString()} pt`;
+      cost.setAttribute("aria-label", `1個${prize.cost}ポイント`);
+      count.textContent = String(quantity);
+      count.setAttribute("aria-label", `${prize.name}の選択数`);
+      card.classList.toggle("prize-selected", quantity > 0);
+      minus.disabled = quantity <= 0;
       plus.disabled = quantity >= 99;
-      button.disabled = state.points < total;
-      button.textContent = button.disabled ? `あと${(total - state.points).toLocaleString()} pt` : "交換する";
+      updateCart();
     }
-    bindQuantityHold(minus, () => { quantity = Math.max(1, quantity - 1); updateQuantity(); });
+    bindQuantityHold(minus, () => { quantity = Math.max(0, quantity - 1); updateQuantity(); });
     bindQuantityHold(plus, () => { quantity = Math.min(99, quantity + 1); updateQuantity(); });
     updateQuantity();
-    button.addEventListener("click", () => {
-      pendingPrizeId = prize.id;
-      pendingQuantity = quantity;
-      exchangeDialog.returnValue = "";
-      document.querySelector("#exchange-description").textContent = `${prize.name} × ${quantity}個と合計${prize.cost * quantity} ptで交換します。交換後の残高は${state.points - prize.cost * quantity} ptです。`;
-      exchangeDialog.showModal();
-    });
     const edit = document.createElement("button");
     edit.className = "prize-edit-button";
     edit.type = "button";
@@ -315,13 +329,11 @@ function renderPrizes() {
       document.querySelector("#prize-edit-cost").value = prize.cost;
       editDialog.showModal();
     });
-    const actions = document.createElement("div");
-    actions.className = "prize-actions";
-    actions.append(button);
-    card.append(edit, title, priceRow, actions);
+    card.append(edit, title, priceRow);
     list.append(card);
   });
   renderPrizeHistory();
+  updateCart();
   updatePrizeVisibility();
 }
 
@@ -423,18 +435,26 @@ document.querySelector("#prize-edit-form").addEventListener("submit", event => {
 });
 
 exchangeDialog.addEventListener("close", () => {
-  const prize = state.prizes.find(item => item.id === pendingPrizeId);
-  const quantity = pendingQuantity;
-  pendingPrizeId = null;
-  pendingQuantity = 1;
-  if (exchangeDialog.returnValue !== "confirm" || !prize || !Number.isInteger(quantity) || quantity < 1 || quantity > 99 || state.points < prize.cost * quantity) return;
-  state.points -= prize.cost * quantity;
-  for (let i = 0; i < quantity; i++) {
-    state.exchanges.push({ id: crypto.randomUUID(), name: prize.name, cost: prize.cost, date: new Date().toISOString(), used: false });
+  const cart = pendingCart;
+  pendingCart = [];
+  if (exchangeDialog.returnValue !== "confirm" || !cart.length) return;
+  const valid = cart.every(prize => Number.isInteger(prize.quantity) && prize.quantity > 0 && prize.quantity <= 99 && state.prizes.some(current => current.id === prize.id && current.cost === prize.cost && current.name === prize.name));
+  const total = cart.reduce((sum, prize) => sum + prize.cost * prize.quantity, 0);
+  if (!valid || total > state.points) {
+    document.querySelector("#reward-status").textContent = "選択内容または残高が変わりました。もう一度確認してください。";
+    return;
+  }
+  state.points -= total;
+  for (const prize of cart) {
+    for (let i = 0; i < prize.quantity; i++) {
+      state.exchanges.push({ id: crypto.randomUUID(), name: prize.name, cost: prize.cost, date: new Date().toISOString(), used: false });
+    }
   }
   saveState();
+  prizeQuantities.clear();
+  historyUsed = false;
   renderPrizes();
-  document.querySelector("#reward-status").textContent = `${prize.name} × ${quantity}個と交換しました。`;
+  document.querySelector("#reward-status").textContent = `${cart.length}種類のプライズを合計${total.toLocaleString()} ptで交換しました。`;
 });
 
 window.addEventListener("hashchange", showView);

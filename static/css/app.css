@@ -38,7 +38,12 @@
 .prize-tone-sky { --prize-edge: #bbd9e9; --prize-tint: #edf5fc; }
 .prize-tone-lavender { --prize-edge: #d5c4e8; --prize-tint: #f4edfa; }
 .prize-tone-gold { --prize-edge: #e6cf9e; --prize-tint: #fcf3df; }
-.prize-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.prize-shop-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 18px; }
+.cart-controls { text-align: right; }
+.cart-controls .help-text { margin: 8px 0 0; }
+.cart-controls .button { width: auto; white-space: nowrap; }
+.panel.prize-selected { outline: 2px solid var(--prize-edge); outline-offset: 3px; }
+#exchange-description { white-space: pre-line; max-height: 45vh; overflow-y: auto; }
 .prize-edit-form { display: grid; gap: 18px; }
 .prize-edit-form label { font-size: 13px; }
 .prize-edit-form input { display: block; height: 44px; border-radius: 10px; padding: 10px; margin-top: 8px; }
