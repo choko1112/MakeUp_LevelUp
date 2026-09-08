@@ -172,6 +172,7 @@ function showView() {
 
 const exchangeDialog = document.querySelector("#exchange-dialog");
 let pendingPrizeId = null;
+let pendingQuantity = 1;
 const editDialog = document.querySelector("#prize-edit-dialog");
 let editingPrizeId = null;
 
@@ -190,22 +191,50 @@ function renderPrizes() {
     const title = document.createElement("h3");
     title.textContent = prize.name;
     const cost = document.createElement("p");
-    cost.textContent = `${prize.cost.toLocaleString()} pt`;
+    let quantity = 1;
+    const priceRow = document.createElement("div");
+    priceRow.className = "prize-price-row";
+    const stepper = document.createElement("div");
+    stepper.className = "quantity-stepper";
+    const minus = document.createElement("button");
+    const plus = document.createElement("button");
+    const count = document.createElement("output");
+    minus.type = plus.type = "button";
+    minus.textContent = "−";
+    plus.textContent = "+";
+    minus.setAttribute("aria-label", `${prize.name}の個数を減らす`);
+    plus.setAttribute("aria-label", `${prize.name}の個数を増やす`);
+    count.setAttribute("aria-live", "polite");
+    stepper.append(minus, count, plus);
+    priceRow.append(cost, stepper);
     const button = document.createElement("button");
     button.className = "button button-dark";
     button.type = "button";
-    button.disabled = state.points < prize.cost;
-    button.textContent = button.disabled ? `あと${(prize.cost - state.points).toLocaleString()} pt` : "交換する";
+    function updateQuantity() {
+      const total = prize.cost * quantity;
+      cost.textContent = `${total.toLocaleString()} pt`;
+      cost.setAttribute("aria-label", `合計${total}ポイント、1個${prize.cost}ポイント`);
+      count.textContent = `${quantity}個`;
+      minus.disabled = quantity <= 1;
+      plus.disabled = quantity >= 99;
+      button.disabled = state.points < total;
+      button.textContent = button.disabled ? `あと${(total - state.points).toLocaleString()} pt` : "交換する";
+    }
+    minus.addEventListener("click", () => { quantity = Math.max(1, quantity - 1); updateQuantity(); });
+    plus.addEventListener("click", () => { quantity = Math.min(99, quantity + 1); updateQuantity(); });
+    updateQuantity();
     button.addEventListener("click", () => {
       pendingPrizeId = prize.id;
+      pendingQuantity = quantity;
       exchangeDialog.returnValue = "";
-      document.querySelector("#exchange-description").textContent = `${prize.name}と${prize.cost} ptで交換します。交換後の残高は${state.points - prize.cost} ptです。`;
+      document.querySelector("#exchange-description").textContent = `${prize.name} × ${quantity}個と合計${prize.cost * quantity} ptで交換します。交換後の残高は${state.points - prize.cost * quantity} ptです。`;
       exchangeDialog.showModal();
     });
     const edit = document.createElement("button");
-    edit.className = "button button-outline";
+    edit.className = "prize-edit-button";
     edit.type = "button";
-    edit.textContent = "編集";
+    edit.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 5 5L9 20l-6 1 1-6L16 3Z"/><path d="m13 6 5 5"/></svg>';
+    edit.title = "プライズを編集";
     edit.setAttribute("aria-label", `${prize.name}を編集`);
     edit.addEventListener("click", () => {
       editingPrizeId = prize.id;
@@ -215,8 +244,8 @@ function renderPrizes() {
     });
     const actions = document.createElement("div");
     actions.className = "prize-actions";
-    actions.append(button, edit);
-    card.append(title, cost, actions);
+    actions.append(button);
+    card.append(edit, title, priceRow, actions);
     list.append(card);
   });
   const history = document.querySelector("#prize-history");
@@ -257,6 +286,15 @@ document.querySelector("#prize-form").addEventListener("submit", event => {
 });
 
 document.querySelector("#prize-edit-cancel").addEventListener("click", () => editDialog.close());
+document.querySelector("#prize-edit-delete").addEventListener("click", () => {
+  const prize = state.prizes.find(item => item.id === editingPrizeId);
+  if (!prize || !window.confirm(`「${prize.name}」を削除しますか？交換済みの履歴は残ります。`)) return;
+  state.prizes = state.prizes.filter(item => item.id !== prize.id);
+  saveState();
+  editDialog.close();
+  renderPrizes();
+  document.querySelector("#reward-status").textContent = `${prize.name}を削除しました。`;
+});
 editDialog.addEventListener("close", () => { editingPrizeId = null; });
 document.querySelector("#prize-edit-form").addEventListener("submit", event => {
   event.preventDefault();
@@ -274,13 +312,17 @@ document.querySelector("#prize-edit-form").addEventListener("submit", event => {
 
 exchangeDialog.addEventListener("close", () => {
   const prize = state.prizes.find(item => item.id === pendingPrizeId);
+  const quantity = pendingQuantity;
   pendingPrizeId = null;
-  if (exchangeDialog.returnValue !== "confirm" || !prize || state.points < prize.cost) return;
-  state.points -= prize.cost;
-  state.exchanges.push({ id: crypto.randomUUID(), name: prize.name, cost: prize.cost, date: new Date().toISOString(), used: false });
+  pendingQuantity = 1;
+  if (exchangeDialog.returnValue !== "confirm" || !prize || !Number.isInteger(quantity) || quantity < 1 || quantity > 99 || state.points < prize.cost * quantity) return;
+  state.points -= prize.cost * quantity;
+  for (let i = 0; i < quantity; i++) {
+    state.exchanges.push({ id: crypto.randomUUID(), name: prize.name, cost: prize.cost, date: new Date().toISOString(), used: false });
+  }
   saveState();
   renderPrizes();
-  document.querySelector("#reward-status").textContent = `${prize.name}と交換しました。`;
+  document.querySelector("#reward-status").textContent = `${prize.name} × ${quantity}個と交換しました。`;
 });
 
 window.addEventListener("hashchange", showView);

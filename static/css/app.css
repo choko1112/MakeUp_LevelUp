@@ -38,7 +38,16 @@
 .prize-edit-form { display: grid; gap: 18px; }
 .prize-edit-form label { font-size: 13px; }
 .prize-edit-form input { display: block; height: 44px; border-radius: 10px; padding: 10px; margin-top: 8px; }
-.prize-card h3 { margin-top: 0; }
+.prize-card { position: relative; }
+.prize-card h3 { margin-top: 0; padding-right: 38px; }
+.prize-edit-button { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--prize-edge); border-radius: 10px; background: #ffffffa6; cursor: pointer; }
+.prize-edit-button:hover { background: white; }
+.prize-price-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+.prize-price-row p { margin: 0; }
+.quantity-stepper { display: flex; align-items: center; gap: 6px; }
+.quantity-stepper button { width: 34px; height: 36px; border: 1px solid var(--prize-edge); border-radius: 9px; background: #ffffffb3; cursor: pointer; font-size: 18px; }
+.quantity-stepper output { min-width: 36px; text-align: center; font-size: 13px; }
+.button.button-danger { color: #943c3c; background: #fff2f0; border: 1px solid #e5bcb7; }
 .prize-card p { color: #816329; font-size: 22px; }
 .exchange-item { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 20px; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; }
 .exchange-unused { background: #edf7ee; border: 2px solid #96b69c; border-left-width: 7px; }
