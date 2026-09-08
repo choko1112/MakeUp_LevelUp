@@ -18,6 +18,9 @@
       focusDone: false,
       todos: [],
       journal: "",
+      points: 0,
+      prizes: [],
+      exchanges: [],
     };
   }
 
@@ -53,6 +56,8 @@
           id,
           text: typeof todo.text === "string" ? todo.text : "",
           done: todo.done === true,
+          difficulty: ["low", "medium", "high"].includes(todo.difficulty) ? todo.difficulty : "low",
+          rewarded: todo.rewarded === true,
         });
       });
     }
@@ -62,6 +67,19 @@
       focusDone: source.focusDone === true,
       todos,
       journal: typeof source.journal === "string" ? source.journal : "",
+      points: Number.isSafeInteger(source.points) && source.points >= 0 ? source.points : 0,
+      prizes: Array.isArray(source.prizes) ? source.prizes.filter(prize => isPlainObject(prize) && typeof prize.name === "string" && Number.isSafeInteger(prize.cost) && prize.cost > 0).map((prize, index) => ({
+        id: typeof prize.id === "string" && prize.id ? prize.id : `prize-${index + 1}`,
+        name: prize.name,
+        cost: prize.cost,
+      })) : [],
+      exchanges: Array.isArray(source.exchanges) ? source.exchanges.filter(exchange => isPlainObject(exchange) && typeof exchange.name === "string" && Number.isSafeInteger(exchange.cost) && exchange.cost > 0).map((exchange, index) => ({
+        id: typeof exchange.id === "string" && exchange.id ? exchange.id : `exchange-${index + 1}`,
+        name: exchange.name,
+        cost: exchange.cost,
+        date: typeof exchange.date === "string" && exchange.date ? exchange.date : "1970-01-01T00:00:00.000Z",
+        used: exchange.used === true,
+      })) : [],
     };
   }
 
@@ -168,6 +186,35 @@
     return cloneRecord(days[key]);
   }
 
+  const REWARDS_STORAGE_KEY = "steplog:rewards:v1";
+
+  function getRewards() {
+    const storage = getStorage();
+    const item = readItem(storage, REWARDS_STORAGE_KEY);
+    if (!item.exists) return { points: 0, prizes: [], exchanges: [] };
+    if (!item.valid) throw createError("Stored StepLog rewards are malformed; it was left unchanged");
+    const value = isPlainObject(item.value) ? item.value : {};
+    return {
+      points: Number.isSafeInteger(value.points) && value.points >= 0 ? value.points : 0,
+      prizes: Array.isArray(value.prizes) ? value.prizes.filter(prize => isPlainObject(prize) && typeof prize.name === "string" && Number.isSafeInteger(prize.cost) && prize.cost > 0).map((prize, index) => ({ id: typeof prize.id === "string" && prize.id ? prize.id : `prize-${index + 1}`, name: prize.name, cost: prize.cost })) : [],
+      exchanges: Array.isArray(value.exchanges) ? value.exchanges.filter(exchange => isPlainObject(exchange) && typeof exchange.name === "string" && Number.isSafeInteger(exchange.cost) && exchange.cost > 0).map((exchange, index) => ({ id: typeof exchange.id === "string" && exchange.id ? exchange.id : `exchange-${index + 1}`, name: exchange.name, cost: exchange.cost, date: typeof exchange.date === "string" && exchange.date ? exchange.date : new Date().toISOString(), used: exchange.used === true })) : [],
+    };
+  }
+
+  function saveRewards(rewards) {
+    const storage = getStorage();
+    const normalized = getRewards();
+    normalized.points = Number.isSafeInteger(rewards.points) && rewards.points >= 0 ? rewards.points : 0;
+    normalized.prizes = Array.isArray(rewards.prizes) ? rewards.prizes : [];
+    normalized.exchanges = Array.isArray(rewards.exchanges) ? rewards.exchanges : [];
+    try {
+      storage.setItem(REWARDS_STORAGE_KEY, JSON.stringify(normalized));
+    } catch (error) {
+      throw createError("Unable to save StepLog rewards", error);
+    }
+    return normalized;
+  }
+
   global.StepLogStore = Object.freeze({
     STORAGE_KEY,
     LEGACY_STORAGE_KEY,
@@ -176,5 +223,7 @@
     getDay,
     getDays,
     saveDay,
+    getRewards,
+    saveRewards,
   });
 })(typeof window === "undefined" ? globalThis : window);
