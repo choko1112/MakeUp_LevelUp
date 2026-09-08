@@ -10,7 +10,7 @@ def test_dashboard_is_available() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "StepLog" in response.text
+    assert "MakeUpLevelUp" in response.text
     assert "今日のフォーカス" in response.text
 
 

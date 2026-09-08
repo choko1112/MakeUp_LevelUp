@@ -1,5 +1,5 @@
 [project]
-name = "steplog"
+name = "MakeUpLevelUp"
 version = "0.1.0"
 description = "A self-improvement dashboard built with FastAPI"
 requires-python = ">=3.12"
