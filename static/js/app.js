@@ -1,5 +1,6 @@
 const STORAGE_KEY = "steplog:v1";
-const defaultState = { focus: "", focusDone: false, todos: [], journal: "" };
+const defaultState = { focus: "", focusDone: false, todos: [], journal: "", points: 0, prizes: [], exchanges: [] };
+const difficulties = { low: { label: "低", points: 10 }, medium: { label: "中", points: 30 }, high: { label: "高", points: 50 } };
 
 function loadState() {
   try {
@@ -10,6 +11,8 @@ function loadState() {
 }
 
 let state = loadState();
+// Previously completed tasks must not earn points again after upgrading.
+state.todos = state.todos.map(todo => ({ ...todo, difficulty: difficulties[todo.difficulty] ? todo.difficulty : "low", rewarded: todo.rewarded ?? Boolean(todo.done) }));
 const focusForm = document.querySelector("#focus-form");
 const focusInput = document.querySelector("#focus-input");
 const focusResult = document.querySelector("#focus-result");
@@ -56,11 +59,20 @@ function renderTodos() {
     checkbox.setAttribute("aria-label", `${todo.text}を${todo.done ? "未完了" : "完了"}にする`);
     checkbox.addEventListener("change", () => {
       todo.done = checkbox.checked;
+      if (todo.done && !todo.rewarded) {
+        const points = difficulties[todo.difficulty].points;
+        state.points += points;
+        todo.rewarded = true;
+        document.querySelector("#reward-status").textContent = `${points}ポイント獲得しました。`;
+      }
       saveState();
       renderTodos();
+      renderPrizes();
     });
     const label = document.createElement("label");
-    label.textContent = todo.text;
+    checkbox.id = `todo-${todo.id}`;
+    label.htmlFor = checkbox.id;
+    label.textContent = `${todo.text}（難易度：${difficulties[todo.difficulty].label}）`;
     const remove = document.createElement("button");
     remove.className = "delete-todo";
     remove.type = "button";
@@ -113,7 +125,7 @@ todoForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const value = todoInput.value.trim();
   if (!value) return;
-  state.todos.push({ id: crypto.randomUUID(), text: value, done: false });
+  state.todos.push({ id: crypto.randomUUID(), text: value, done: false, difficulty: document.querySelector('input[name="difficulty"]:checked').value, rewarded: false });
   todoInput.value = "";
   saveState();
   renderTodos();
@@ -144,3 +156,90 @@ journalInput.value = state.journal;
 saveStatus.textContent = state.journal ? "保存済み" : "未入力";
 saveStatus.classList.toggle("saved", Boolean(state.journal));
 updateJournalCount();
+
+function showView() {
+  const route = ["#today", "#todos", "#journal", "#prizes"].includes(location.hash) ? location.hash : "#today";
+  document.querySelector("#dashboard-view").hidden = route === "#prizes";
+  document.querySelector("#prizes").hidden = route !== "#prizes";
+  document.querySelectorAll(".main-nav a").forEach(link => {
+    link.classList.toggle("active", link.hash === route);
+    if (link.hash === route) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+  if (route !== "#prizes" && location.hash) document.querySelector(route).scrollIntoView();
+  else window.scrollTo(0, 0);
+}
+
+const exchangeDialog = document.querySelector("#exchange-dialog");
+let pendingPrizeId = null;
+
+function renderPrizes() {
+  document.querySelector("#point-balance").textContent = `${state.points.toLocaleString()} pt`;
+  document.querySelector("#prize-empty").hidden = state.prizes.length > 0;
+  const list = document.querySelector("#prize-list");
+  list.replaceChildren();
+  state.prizes.forEach(prize => {
+    const card = document.createElement("article");
+    card.className = "panel prize-card";
+    const title = document.createElement("h3");
+    title.textContent = prize.name;
+    const cost = document.createElement("p");
+    cost.textContent = `${prize.cost.toLocaleString()} pt`;
+    const button = document.createElement("button");
+    button.className = "button button-dark";
+    button.type = "button";
+    button.disabled = state.points < prize.cost;
+    button.textContent = button.disabled ? `あと${(prize.cost - state.points).toLocaleString()} pt` : "交換する";
+    button.addEventListener("click", () => {
+      pendingPrizeId = prize.id;
+      exchangeDialog.returnValue = "";
+      document.querySelector("#exchange-description").textContent = `${prize.name}と${prize.cost} ptで交換します。交換後の残高は${state.points - prize.cost} ptです。`;
+      exchangeDialog.showModal();
+    });
+    card.append(title, cost, button);
+    list.append(card);
+  });
+  const history = document.querySelector("#prize-history");
+  history.replaceChildren();
+  document.querySelector("#history-empty").hidden = state.exchanges.length > 0;
+  state.exchanges.slice().reverse().forEach(exchange => {
+    const item = document.createElement("li");
+    item.className = "exchange-item";
+    const name = document.createElement("span");
+    name.textContent = `${exchange.name} · ${exchange.cost} pt · ${new Date(exchange.date).toLocaleDateString("ja-JP")}`;
+    const button = document.createElement("button");
+    button.className = "button button-outline";
+    button.type = "button";
+    button.textContent = exchange.used ? "使用済み" : "使った";
+    button.disabled = exchange.used;
+    button.addEventListener("click", () => { exchange.used = true; saveState(); renderPrizes(); });
+    item.append(name, button);
+    history.append(item);
+  });
+}
+
+document.querySelector("#prize-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const name = document.querySelector("#prize-name").value.trim();
+  const cost = Number(document.querySelector("#prize-cost").value);
+  if (!name || !Number.isSafeInteger(cost) || cost < 1 || cost > 1000000) return;
+  state.prizes.push({ id: crypto.randomUUID(), name, cost });
+  saveState();
+  event.target.reset();
+  renderPrizes();
+});
+
+exchangeDialog.addEventListener("close", () => {
+  const prize = state.prizes.find(item => item.id === pendingPrizeId);
+  pendingPrizeId = null;
+  if (exchangeDialog.returnValue !== "confirm" || !prize || state.points < prize.cost) return;
+  state.points -= prize.cost;
+  state.exchanges.push({ id: crypto.randomUUID(), name: prize.name, cost: prize.cost, date: new Date().toISOString(), used: false });
+  saveState();
+  renderPrizes();
+  document.querySelector("#reward-status").textContent = `${prize.name}と交換しました。`;
+});
+
+window.addEventListener("hashchange", showView);
+renderPrizes();
+showView();

@@ -17,12 +17,13 @@
     <header class="site-header">
       <a class="brand" href="/" aria-label="MakeUpLevelUp ホーム"><span class="brand-mark" aria-hidden="true">M</span><span>MakeUpLevelUp</span></a>
       <nav class="main-nav" aria-label="メインナビゲーション">
-        <a class="active" href="#today">今日</a><a href="#todos">TODO</a><a href="#journal">活動日記</a>
+        <a class="active" href="#today">今日</a><a href="#todos">TODO</a><a href="#journal">活動日記</a><a href="#prizes">プライズ</a>
       </nav>
       <div class="header-actions"><span class="streak"><span aria-hidden="true">●</span> 3日継続中</span><button class="avatar" type="button" aria-label="プロフィール（準備中）">MK</button></div>
     </header>
 
     <main id="main-content" class="page-shell">
+      <div id="dashboard-view">
       <section class="welcome" aria-labelledby="welcome-title">
         <div><p class="eyebrow" id="today-label">TODAY</p><h1 id="welcome-title">おはようございます。<br />今日も一歩、前へ。</h1></div>
         <div class="date-card" aria-label="今日の日付"><span id="month-label">9月</span><strong id="day-label">7</strong><span id="weekday-label">月曜日</span></div>
@@ -47,6 +48,8 @@
         <section id="todos" class="panel todos-panel" aria-labelledby="todo-title">
           <div class="section-heading compact"><div class="heading-icon check-icon" aria-hidden="true">✓</div><div><p class="eyebrow">TASKS</p><h2 id="todo-title">TODO</h2></div><span id="todo-count" class="count-badge">0件</span></div>
           <form id="todo-form" class="inline-form"><label class="sr-only" for="todo-input">新しいTODO</label><input id="todo-input" maxlength="80" placeholder="やることを追加" autocomplete="off" /><button type="submit" aria-label="TODOを追加">＋</button></form>
+          <fieldset class="difficulty"><legend>達成難易度</legend><p>自分にとっての取り組みの大変さで選びましょう。</p><label><input form="todo-form" type="radio" name="difficulty" value="low" checked />低 <small>10 pt</small></label><label><input form="todo-form" type="radio" name="difficulty" value="medium" />中 <small>30 pt</small></label><label><input form="todo-form" type="radio" name="difficulty" value="high" />高 <small>50 pt</small></label></fieldset>
+          <p class="help-text">ポイントは初回の達成時に付与されます。完了を取り消しても再付与されません。</p>
           <ul id="todo-list" class="todo-list" aria-live="polite"></ul>
           <div id="todo-empty" class="empty-state"><span aria-hidden="true">○</span><p>TODOはまだありません</p><small>上の欄から、次にやることを追加できます。</small></div>
         </section>
@@ -63,6 +66,19 @@
         <textarea id="journal-input" maxlength="1000" placeholder="今日取り組んだこと、学んだこと、明日につなげたい気づきを自由に書いてみましょう。"></textarea>
         <div class="journal-footer"><span id="character-count">0 / 1000</span><button id="journal-save" class="button button-dark" type="button">日記を保存</button></div>
       </section>
+      </div>
+      <section id="prizes" hidden aria-labelledby="prizes-title">
+        <div class="welcome"><div><p class="eyebrow">REWARDS</p><h1 id="prizes-title">頑張った自分に、ご褒美。</h1></div></div>
+        <div class="panel balance-card"><span>使えるポイント</span><strong id="point-balance">0 pt</strong><p>TODOを達成して、楽しみにしていたプライズと交換しよう。</p></div>
+        <section class="panel prize-panel" aria-labelledby="prize-add-title"><h2 id="prize-add-title">プライズを登録</h2>
+          <form id="prize-form" class="prize-form"><label>プライズ名<input id="prize-name" maxlength="80" required placeholder="例：アイス1個" /></label><label>交換ポイント<input id="prize-cost" type="number" min="1" max="1000000" step="1" required placeholder="例：500" /></label><button class="button button-dark" type="submit">登録する</button></form>
+          <p class="help-text">1日50 ptなら、500 ptは約10日分の目安です。</p>
+        </section>
+        <section class="prize-panel" aria-labelledby="prize-list-title"><h2 id="prize-list-title">交換できるプライズ</h2><p id="prize-empty" class="help-text">楽しみにしたいご褒美を登録しましょう。</p><div id="prize-list" class="prize-grid"></div></section>
+        <section class="panel prize-panel" aria-labelledby="history-title"><h2 id="history-title">交換したプライズ</h2><p id="history-empty" class="help-text">交換したプライズはここに表示されます。</p><ul id="prize-history" class="todo-list"></ul></section>
+      </section>
+      <p id="reward-status" role="status" class="help-text"></p>
+      <dialog id="exchange-dialog" aria-labelledby="exchange-title"><h2 id="exchange-title">プライズと交換</h2><p id="exchange-description"></p><form method="dialog" class="dialog-actions"><button class="button button-outline" value="cancel">キャンセル</button><button id="exchange-confirm" class="button button-dark" value="confirm">交換する</button></form></dialog>
     </main>
 
     <footer><p>Small steps, meaningful growth.</p><span>MakeUpLevelUp</span></footer>
