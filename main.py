@@ -23,6 +23,11 @@ async def dashboard(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request=request, name="index.html")
 
 
+@app.get("/calendar", response_class=HTMLResponse, include_in_schema=False)
+async def calendar(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request=request, name="calendar.html")
+
+
 @app.get("/api/health", tags=["system"])
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}

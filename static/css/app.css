@@ -14,6 +14,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: "DM Sans", "Noto Sans JP", sans-serif; -webkit-font-smoothing: antialiased; }
 button, input, textarea { font: inherit; }
@@ -113,7 +114,7 @@ footer p { margin: 0; }
 footer span { font-family: "DM Sans", sans-serif; font-style: normal; font-weight: 700; }
 
 @media (max-width: 760px) {
-  .site-header { grid-template-columns: 1fr auto; padding: 0 20px; }
+  .site-header { grid-template-columns: 1fr auto; padding: 0 20px; backdrop-filter: none; }
   .main-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 62px; justify-content: space-around; gap: 0; border-top: 1px solid var(--line); background: rgba(255, 254, 250, .96); }
   .main-nav a { flex: 1; }
   .main-nav a.active::after { top: 0; bottom: auto; left: 25%; right: 25%; }
