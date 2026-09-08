@@ -47,6 +47,12 @@
 .quantity-stepper { display: flex; align-items: center; gap: 6px; }
 .quantity-stepper button { width: 34px; height: 36px; border: 1px solid var(--prize-edge); border-radius: 9px; background: #ffffffb3; cursor: pointer; font-size: 18px; }
 .quantity-stepper output { min-width: 36px; text-align: center; font-size: 13px; }
+.quantity-stepper button { touch-action: none; user-select: none; -webkit-user-select: none; }
+#prize-delete-dialog { width: min(400px, calc(100% - 40px)); border-color: #e5bcb7; box-shadow: 0 24px 80px #20231f33; }
+#prize-delete-dialog::backdrop { background: #20231f55; backdrop-filter: blur(2px); }
+#prize-delete-dialog h2 { font-size: 20px; }
+#prize-delete-dialog p { font-size: 13px; line-height: 1.8; margin-bottom: 24px; }
+.delete-dialog-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #fff2f0; color: #943c3c; font-size: 22px; font-weight: 700; }
 .button.button-danger { color: #943c3c; background: #fff2f0; border: 1px solid #e5bcb7; }
 .prize-card p { color: #816329; font-size: 22px; }
 .exchange-item { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 20px; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; }

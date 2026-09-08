@@ -175,12 +175,47 @@ let pendingPrizeId = null;
 let pendingQuantity = 1;
 const editDialog = document.querySelector("#prize-edit-dialog");
 let editingPrizeId = null;
+const deleteDialog = document.querySelector("#prize-delete-dialog");
+let deletingPrizeId = null;
+let stopQuantityHold = () => {};
+
+function bindQuantityHold(button, change) {
+  let timer;
+  let repeated = false;
+  function stop() { clearTimeout(timer); }
+  button.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || button.disabled) return;
+    stopQuantityHold();
+    stopQuantityHold = stop;
+    repeated = false;
+    button.setPointerCapture(event.pointerId);
+    const repeat = () => {
+      if (button.disabled || !button.isConnected) return;
+      repeated = true;
+      change();
+      timer = setTimeout(repeat, 90);
+    };
+    timer = setTimeout(repeat, 450);
+  });
+  for (const type of ["pointerup", "pointercancel", "lostpointercapture", "blur"]) {
+    button.addEventListener(type, stop);
+  }
+  button.addEventListener("click", event => {
+    if (!button.disabled && (!repeated || event.detail === 0)) change();
+    repeated = false;
+  });
+  button.addEventListener("contextmenu", event => event.preventDefault());
+}
+window.addEventListener("blur", () => stopQuantityHold());
+window.addEventListener("hashchange", () => stopQuantityHold());
+document.addEventListener("visibilitychange", () => { if (document.hidden) stopQuantityHold(); });
 
 function prizeTone(cost) {
   return cost < 100 ? "mint" : cost < 500 ? "sky" : cost < 1000 ? "lavender" : "gold";
 }
 
 function renderPrizes() {
+  stopQuantityHold();
   document.querySelector("#point-balance").textContent = `${state.points.toLocaleString()} pt`;
   document.querySelector("#prize-empty").hidden = state.prizes.length > 0;
   const list = document.querySelector("#prize-list");
@@ -220,8 +255,8 @@ function renderPrizes() {
       button.disabled = state.points < total;
       button.textContent = button.disabled ? `あと${(total - state.points).toLocaleString()} pt` : "交換する";
     }
-    minus.addEventListener("click", () => { quantity = Math.max(1, quantity - 1); updateQuantity(); });
-    plus.addEventListener("click", () => { quantity = Math.min(99, quantity + 1); updateQuantity(); });
+    bindQuantityHold(minus, () => { quantity = Math.max(1, quantity - 1); updateQuantity(); });
+    bindQuantityHold(plus, () => { quantity = Math.min(99, quantity + 1); updateQuantity(); });
     updateQuantity();
     button.addEventListener("click", () => {
       pendingPrizeId = prize.id;
@@ -288,7 +323,16 @@ document.querySelector("#prize-form").addEventListener("submit", event => {
 document.querySelector("#prize-edit-cancel").addEventListener("click", () => editDialog.close());
 document.querySelector("#prize-edit-delete").addEventListener("click", () => {
   const prize = state.prizes.find(item => item.id === editingPrizeId);
-  if (!prize || !window.confirm(`「${prize.name}」を削除しますか？交換済みの履歴は残ります。`)) return;
+  if (!prize) return;
+  deletingPrizeId = prize.id;
+  deleteDialog.returnValue = "";
+  document.querySelector("#prize-delete-description").textContent = `「${prize.name}」を削除します。交換済みの履歴とポイント残高はそのまま残ります。`;
+  deleteDialog.showModal();
+});
+deleteDialog.addEventListener("close", () => {
+  const prize = state.prizes.find(item => item.id === deletingPrizeId);
+  deletingPrizeId = null;
+  if (deleteDialog.returnValue !== "delete" || !prize) return;
   state.prizes = state.prizes.filter(item => item.id !== prize.id);
   saveState();
   editDialog.close();
