@@ -25,6 +25,7 @@
 .balance-card p { font-size: 13px; }
 .prize-panel { padding: 26px; margin-top: 22px; }
 .prize-panel h2 { font-size: 20px; margin-top: 0; }
+.show-all-button { display: block; margin: 22px auto 0; }
 .prize-form { display: flex; align-items: end; gap: 14px; }
 .prize-form label { flex: 1; min-width: 0; font-size: 13px; }
 .prize-form input { display: block; height: 44px; border-radius: 10px; padding: 10px; margin-top: 8px; }

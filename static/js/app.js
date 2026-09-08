@@ -178,6 +178,31 @@ let editingPrizeId = null;
 const deleteDialog = document.querySelector("#prize-delete-dialog");
 let deletingPrizeId = null;
 let stopQuantityHold = () => {};
+let showAllPrizes = false;
+let showAllHistory = false;
+
+function updatePrizeVisibility() {
+  for (const [listId, buttonId, limit, expanded] of [
+    ["#prize-list", "#prizes-show-all", 6, showAllPrizes],
+    ["#prize-history", "#history-show-all", 5, showAllHistory],
+  ]) {
+    const items = document.querySelector(listId).children;
+    Array.from(items).forEach((item, index) => { item.hidden = !expanded && index >= limit; });
+    const button = document.querySelector(buttonId);
+    button.hidden = items.length <= limit;
+    button.textContent = expanded ? "折りたたむ" : `すべて表示（全${items.length}件）`;
+    button.setAttribute("aria-expanded", String(expanded));
+  }
+}
+document.querySelector("#prizes-show-all").addEventListener("click", () => {
+  stopQuantityHold();
+  showAllPrizes = !showAllPrizes;
+  updatePrizeVisibility();
+});
+document.querySelector("#history-show-all").addEventListener("click", () => {
+  showAllHistory = !showAllHistory;
+  updatePrizeVisibility();
+});
 
 function bindQuantityHold(button, change) {
   let timer;
@@ -307,6 +332,7 @@ function renderPrizes() {
     if (!exchange.used) item.append(button);
     history.append(item);
   });
+  updatePrizeVisibility();
 }
 
 document.querySelector("#prize-form").addEventListener("submit", event => {
