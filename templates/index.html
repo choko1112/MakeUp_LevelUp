@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}" />
+    <script src="{{ url_for('static', path='/js/storage.js') }}" defer></script>
     <script src="{{ url_for('static', path='/js/app.js') }}" defer></script>
   </head>
   <body>
@@ -17,7 +18,7 @@
     <header class="site-header">
       <a class="brand" href="/" aria-label="StepLog ホーム"><span class="brand-mark" aria-hidden="true">S</span><span>StepLog</span></a>
       <nav class="main-nav" aria-label="メインナビゲーション">
-        <a class="active" href="#today">今日</a><a href="#todos">TODO</a><a href="#journal">活動日記</a>
+        <a class="active" href="#today">今日</a><a href="#todos">TODO</a><a href="#journal">活動日記</a><a href="/calendar">カレンダー</a>
       </nav>
       <div class="header-actions"><span class="streak"><span aria-hidden="true">●</span> 3日継続中</span><button class="avatar" type="button" aria-label="プロフィール（準備中）">MK</button></div>
     </header>

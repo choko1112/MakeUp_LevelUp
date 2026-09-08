@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f5ee" />
+    <title>カレンダー | StepLog</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/calendar.css') }}" />
+    <script src="{{ url_for('static', path='/js/storage.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/calendar.js') }}" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">メインコンテンツへ</a>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="StepLog ホーム"><span class="brand-mark" aria-hidden="true">S</span><span>StepLog</span></a>
+      <nav class="main-nav" aria-label="メインナビゲーション">
+        <a href="/#today">今日</a><a href="/#todos">TODO</a><a href="/#journal">活動日記</a><a class="active" aria-current="page" href="/calendar">カレンダー</a>
+      </nav>
+    </header>
+    <main id="main-content" class="page-shell calendar-shell">
+      <section class="welcome"><div><p class="eyebrow">YOUR DAILY STEPS</p><h1>日々の一歩を、振り返る。</h1><p class="calendar-intro">日付を選んで、その日の取り組みや気づきを見てみましょう。</p></div></section>
+      <p id="calendar-error" role="alert" hidden></p>
+      <div class="calendar-layout">
+        <section class="panel calendar-panel" aria-labelledby="calendar-month">
+          <div class="calendar-toolbar">
+            <h2 id="calendar-month" aria-live="polite"></h2>
+            <div class="calendar-controls"><button id="previous-month" type="button" aria-label="前の月">‹</button><button id="calendar-today" type="button">今日</button><button id="next-month" type="button" aria-label="次の月">›</button></div>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+          <div id="calendar-days" class="calendar-days" role="group" aria-label="日付を選択"></div>
+          <p class="calendar-legend"><span aria-hidden="true">●</span> 記録のある日</p>
+        </section>
+        <section class="panel day-panel" aria-labelledby="selected-date" aria-live="polite">
+          <p class="eyebrow">DAILY REVIEW</p><h2 id="selected-date"></h2>
+          <p id="day-empty" class="day-empty">この日の記録はまだありません。</p>
+          <div class="day-section"><h3>今日のフォーカス</h3><span id="day-focus-status" class="focus-status"></span><p id="day-focus"></p></div>
+          <div class="day-section"><h3>TODO <span id="day-todo-count"></span></h3><p id="day-todos-empty">TODOの記録はありません。</p><ul id="day-todos" class="review-todos"></ul></div>
+          <div class="day-section"><h3>今日の活動日記</h3><p id="day-journal" class="review-journal"></p></div>
+          <a id="edit-today" class="review-edit" href="/">今日の記録を書く →</a>
+        </section>
+      </div>
+      <p class="calendar-note">記録はこのブラウザーに保存されます。以前の形式の記録は、初回読み込み日へ引き継がれます。</p>
+      <noscript>カレンダーを表示するにはJavaScriptを有効にしてください。</noscript>
+    </main>
+    <footer><p>Small steps, meaningful growth.</p><span>StepLog</span></footer>
+  </body>
+</html>

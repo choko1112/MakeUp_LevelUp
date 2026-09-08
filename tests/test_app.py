@@ -19,3 +19,15 @@ def test_health_check() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_calendar_page_and_navigation() -> None:
+    dashboard = client.get("/")
+    assert 'href="/calendar"' in dashboard.text
+    response = client.get("/calendar")
+    assert response.status_code == 200
+    assert 'id="calendar-days"' in response.text
+    assert 'id="day-journal"' in response.text
+    assert 'aria-current="page"' in response.text
+    for asset in ("js/storage.js", "js/calendar.js", "css/calendar.css"):
+        assert client.get(f"/static/{asset}").status_code == 200

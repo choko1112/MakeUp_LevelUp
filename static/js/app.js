@@ -1,15 +1,37 @@
-const STORAGE_KEY = "steplog:v1";
 const defaultState = { focus: "", focusDone: false, todos: [], journal: "" };
+const store = window.StepLogStore;
 
-function loadState() {
+function fallbackDateKey(date = new Date()) {
+  const value = date instanceof Date ? date : new Date(date);
+  return [value.getFullYear(), String(value.getMonth() + 1).padStart(2, "0"), String(value.getDate()).padStart(2, "0")].join("-");
+}
+
+function todayKey() {
+  return store ? store.dateKey() : fallbackDateKey();
+}
+
+function emptyState() {
+  return store ? store.emptyRecord() : { ...defaultState, todos: [] };
+}
+
+let dayReadFailed = false;
+
+function readDay(key) {
   try {
-    return { ...defaultState, ...JSON.parse(localStorage.getItem(STORAGE_KEY)) };
+    dayReadFailed = false;
+    return store ? store.getDay(key) : emptyState();
   } catch {
-    return { ...defaultState };
+    dayReadFailed = true;
+    return emptyState();
   }
 }
 
-let state = loadState();
+let activeDateKey = todayKey();
+let lastTodayKey = activeDateKey;
+let state = readDay(activeDateKey);
+let pendingStates = new Map();
+let journalDirty = false;
+
 const focusForm = document.querySelector("#focus-form");
 const focusInput = document.querySelector("#focus-input");
 const focusResult = document.querySelector("#focus-result");
@@ -23,16 +45,58 @@ const todoCount = document.querySelector("#todo-count");
 const journalInput = document.querySelector("#journal-input");
 const saveStatus = document.querySelector("#save-status");
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function setSaveStatus(text, saved = false, error = false) {
+  saveStatus.textContent = text;
+  saveStatus.classList.toggle("saved", saved);
+  saveStatus.classList.toggle("save-error", error);
 }
 
-function setDate() {
-  const today = new Date();
-  document.querySelector("#month-label").textContent = `${today.getMonth() + 1}月`;
-  document.querySelector("#day-label").textContent = today.getDate();
-  document.querySelector("#weekday-label").textContent = new Intl.DateTimeFormat("ja-JP", { weekday: "long" }).format(today);
-  document.querySelector("#today-label").textContent = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" }).format(today).toUpperCase();
+function stateWithJournalDraft() {
+  return { ...state, todos: state.todos.map((todo) => ({ ...todo })), journal: journalInput.value.trim() };
+}
+
+function persistDay(key, record) {
+  if (!store) {
+    setSaveStatus("保存できません", false, true);
+    return false;
+  }
+
+  try {
+    const saved = store.saveDay(key, record);
+    if (key === activeDateKey) {
+      state = saved;
+      dayReadFailed = false;
+    }
+    pendingStates.delete(key);
+    return true;
+  } catch {
+    pendingStates.set(key, { ...record, todos: record.todos.map((todo) => ({ ...todo })) });
+    setSaveStatus("保存に失敗しました", false, true);
+    return false;
+  }
+}
+
+function saveState({ includeJournal = false } = {}) {
+  const nextState = includeJournal ? stateWithJournalDraft() : { ...state, todos: state.todos.map((todo) => ({ ...todo })) };
+  const saved = persistDay(activeDateKey, nextState);
+  if (saved && includeJournal) {
+    journalDirty = false;
+    setSaveStatus(nextState.journal ? "保存済み" : "未入力", Boolean(nextState.journal));
+  }
+  return saved;
+}
+
+function dateFromKey(key) {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function setDate(key) {
+  const date = dateFromKey(key);
+  document.querySelector("#month-label").textContent = `${date.getMonth() + 1}月`;
+  document.querySelector("#day-label").textContent = date.getDate();
+  document.querySelector("#weekday-label").textContent = new Intl.DateTimeFormat("ja-JP", { weekday: "long" }).format(date);
+  document.querySelector("#today-label").textContent = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" }).format(date).toUpperCase();
 }
 
 function renderFocus() {
@@ -83,6 +147,40 @@ function updateJournalCount() {
   document.querySelector("#character-count").textContent = `${journalInput.value.length} / 1000`;
 }
 
+function renderDay() {
+  setDate(activeDateKey);
+  renderFocus();
+  renderTodos();
+  journalInput.value = state.journal;
+  journalDirty = false;
+  if (dayReadFailed) setSaveStatus("保存データを読み込めません", false, true);
+  else setSaveStatus(state.journal ? "保存済み" : "未入力", Boolean(state.journal));
+  updateJournalCount();
+}
+
+function setActiveDate(key) {
+  if (typeof key !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return false;
+  if (key === activeDateKey) return true;
+
+  // Commit a journal draft to the day it was written on before changing the view.
+  const outgoing = stateWithJournalDraft();
+  if (!persistDay(activeDateKey, outgoing)) return false;
+
+  activeDateKey = key;
+  state = pendingStates.get(key) || readDay(key);
+  renderDay();
+  if (pendingStates.has(key)) setSaveStatus("保存に失敗しました", false, true);
+  return true;
+}
+
+function checkDateRollover() {
+  const currentTodayKey = todayKey();
+  if (currentTodayKey === lastTodayKey) return;
+  const previousTodayKey = lastTodayKey;
+  if (activeDateKey === previousTodayKey && !setActiveDate(currentTodayKey)) return;
+  lastTodayKey = currentTodayKey;
+}
+
 focusForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const value = focusInput.value.trim();
@@ -113,7 +211,8 @@ todoForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const value = todoInput.value.trim();
   if (!value) return;
-  state.todos.push({ id: crypto.randomUUID(), text: value, done: false });
+  const id = window.crypto && typeof window.crypto.randomUUID === "function" ? window.crypto.randomUUID() : `todo-${Date.now()}`;
+  state.todos.push({ id, text: value, done: false });
   todoInput.value = "";
   saveState();
   renderTodos();
@@ -121,15 +220,12 @@ todoForm.addEventListener("submit", (event) => {
 
 journalInput.addEventListener("input", () => {
   updateJournalCount();
-  saveStatus.textContent = "未保存";
-  saveStatus.classList.remove("saved");
+  journalDirty = journalInput.value.trim() !== state.journal;
+  setSaveStatus(journalDirty ? "未保存" : state.journal ? "保存済み" : "未入力", !journalDirty && Boolean(state.journal));
 });
 
 document.querySelector("#journal-save").addEventListener("click", () => {
-  state.journal = journalInput.value.trim();
-  saveState();
-  saveStatus.textContent = state.journal ? "保存済み" : "未入力";
-  saveStatus.classList.toggle("saved", Boolean(state.journal));
+  saveState({ includeJournal: true });
 });
 
 document.querySelector("#advice-button").addEventListener("click", () => {
@@ -137,10 +233,27 @@ document.querySelector("#advice-button").addEventListener("click", () => {
   note.textContent = "AI APIを接続すると、ここにアドバイスが表示されます。";
 });
 
-setDate();
-renderFocus();
-renderTodos();
-journalInput.value = state.journal;
-saveStatus.textContent = state.journal ? "保存済み" : "未入力";
-saveStatus.classList.toggle("saved", Boolean(state.journal));
-updateJournalCount();
+window.StepLogApp = Object.freeze({
+  getActiveDateKey: () => activeDateKey,
+  setActiveDate,
+  checkDateRollover,
+});
+
+renderDay();
+
+window.addEventListener("beforeunload", (event) => {
+  pendingStates.forEach((pending, key) => persistDay(key, pending));
+  if (journalDirty) persistDay(activeDateKey, stateWithJournalDraft());
+  if (pendingStates.size) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+});
+window.addEventListener("focus", checkDateRollover);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) checkDateRollover();
+});
+
+// A short polling interval catches a date change while the page remains open.
+const rolloverTimer = window.setInterval(checkDateRollover, 60000);
+if (rolloverTimer && typeof rolloverTimer.unref === "function") rolloverTimer.unref();
