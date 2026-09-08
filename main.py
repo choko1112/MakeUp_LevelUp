@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(
-    title="StepLog",
+    title="MakeUpLevelUp",
     description="毎日の自己研鑽を、小さく続けるためのダッシュボード",
     version="0.1.0",
 )

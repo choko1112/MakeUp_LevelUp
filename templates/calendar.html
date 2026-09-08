@@ -4,18 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f7f5ee" />
-    <title>カレンダー | StepLog</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/calendar.css') }}" />
+    <title>カレンダー | MakeUpLevelUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=20260909" />
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/calendar.css') }}?v=20260909" />
     <script src="{{ url_for('static', path='/js/storage.js') }}" defer></script>
     <script src="{{ url_for('static', path='/js/calendar.js') }}" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">メインコンテンツへ</a>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="StepLog ホーム"><span class="brand-mark" aria-hidden="true">S</span><span>StepLog</span></a>
+      <a class="brand" href="/" aria-label="MakeUpLevelUp ホーム"><span class="brand-mark" aria-hidden="true">M</span><span>MakeUpLevelUp</span></a>
       <nav class="main-nav" aria-label="メインナビゲーション">
-        <a href="/#today">今日</a><a href="/#todos">TODO</a><a href="/#journal">活動日記</a><a class="active" aria-current="page" href="/calendar">カレンダー</a>
+        <a href="/#today">今日</a><a href="/#todos">TODO</a><a href="/#journal">活動日記</a><a href="/#prizes">プライズ</a><a class="active" aria-current="page" href="/calendar">カレンダー</a>
       </nav>
     </header>
     <main id="main-content" class="page-shell calendar-shell">
@@ -43,6 +46,6 @@
       <p class="calendar-note">記録はこのブラウザーに保存されます。以前の形式の記録は、初回読み込み日へ引き継がれます。</p>
       <noscript>カレンダーを表示するにはJavaScriptを有効にしてください。</noscript>
     </main>
-    <footer><p>Small steps, meaningful growth.</p><span>StepLog</span></footer>
+    <footer><p>Small steps, meaningful growth.</p><span>MakeUpLevelUp</span></footer>
   </body>
 </html>

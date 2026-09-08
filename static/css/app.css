@@ -113,6 +113,65 @@ footer { display: flex; justify-content: space-between; width: min(100% - 40px, 
 footer p { margin: 0; }
 footer span { font-family: "DM Sans", sans-serif; font-style: normal; font-weight: 700; }
 
+.help-text { color: var(--muted); font-size: 12px; line-height: 1.7; }
+.difficulty { border: 0; padding: 0; margin: 18px 0 0; font-size: 13px; }
+.difficulty p { color: var(--muted); font-size: 11px; }
+.difficulty label { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; }
+.difficulty input { width: auto; accent-color: var(--sage); }
+.difficulty small { color: var(--muted); }
+.balance-card { padding: 28px; background: var(--surface); }
+.balance-card strong { display: block; font-size: 42px; margin: 8px 0; }
+.prize-panel { padding: 26px; margin-top: 22px; }
+.prize-panel h2 { font-size: 20px; margin-top: 0; }
+.prize-form { display: flex; align-items: end; gap: 14px; }
+.prize-form label { flex: 1; min-width: 0; font-size: 13px; }
+.prize-form input { display: block; width: 100%; height: 44px; border-radius: 10px; padding: 10px; margin-top: 8px; }
+.prize-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px; }
+.prize-card { padding: 22px; overflow-wrap: anywhere; border-top: 5px solid #e6cf9e; background: #fcf3df; transition: transform .15s, box-shadow .15s; }
+.prize-card:hover { transform: translateY(-2px); box-shadow: 0 16px 32px rgba(52, 55, 45, .1); }
+.prize-tone-mint { border-top-color: #a8c8b0; background: #edf7ee; }
+.prize-tone-sky { border-top-color: #a9c8dc; background: #edf5fa; }
+.prize-tone-lavender { border-top-color: #c0b5d3; background: #f2eff8; }
+.prize-tone-gold { border-top-color: #e6cf9e; background: #fcf3df; }
+.prize-card h3 { margin-top: 0; }
+.prize-card p { color: #816329; font-size: 22px; }
+.panel.prize-selected { outline: 2px solid #e6cf9e; outline-offset: 3px; }
+.show-all-button { display: block; margin: 22px auto 0; }
+.prize-edit-button { position: absolute; top: 12px; right: 12px; min-height: 36px; padding: 0 11px; }
+.prize-card { position: relative; }
+.prize-card h3 { margin-top: 0; padding-right: 52px; }
+.prize-price-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+.quantity-stepper { display: flex; align-items: center; gap: 6px; }
+.quantity-stepper button { width: 34px; height: 36px; border: 1px solid var(--line); border-radius: 9px; background: #ffffffb3; cursor: pointer; font-size: 18px; }
+.quantity-stepper button:hover:not(:disabled) { background: white; }
+.quantity-stepper button:disabled { opacity: .45; }
+.quantity-stepper output { min-width: 36px; text-align: center; font-size: 13px; }
+.history-filters { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.history-filters button { padding: 10px 16px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; }
+.history-filters button[aria-pressed="true"] { color: var(--ink); background: var(--surface); font-weight: 700; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 12px; }
+dialog { width: min(440px, calc(100% - 32px)); padding: 26px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); color: var(--ink); }
+dialog::backdrop { background: #20231f66; }
+#exchange-description { white-space: pre-line; max-height: 45vh; overflow-y: auto; }
+.button.button-danger { color: #943c3c; background: #fff2f0; border: 1px solid #e5bcb7; }
+button:disabled { opacity: .55; cursor: default; transform: none !important; }
+#today, #todos, #journal, #prizes { scroll-margin-top: 94px; }
+.prize-shop-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 18px; }
+.cart-controls { text-align: right; }
+.exchange-item { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; background: #edf7ee; }
+.exchange-item.exchange-used { background: #f1f0ed; }
+.exchange-details { display: grid; gap: 4px; min-width: 0; }
+.exchange-details span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; }
+.exchange-details small { color: var(--muted); font-size: 11px; }
+.exchange-badge { width: fit-content; color: #526549; font-size: 10px; }
+.exchange-used .exchange-badge { color: var(--muted); }
+.delete-dialog-icon { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 12px; border-radius: 50%; color: #943c3c; background: #fff2f0; font-weight: 700; }
+.prize-edit-form { display: grid; gap: 14px; }
+.prize-edit-form label { color: var(--muted); font-size: 12px; }
+.prize-edit-form input { display: block; height: 44px; margin-top: 6px; padding: 0 12px; border-radius: 10px; }
+.prize-edit-form .button-danger { justify-self: start; }
+@media (max-width: 600px) { .prize-form { flex-direction: column; align-items: stretch; } .prize-panel { padding: 20px; } .exchange-item { flex-wrap: wrap; } }
+
 @media (max-width: 760px) {
   .site-header { grid-template-columns: 1fr auto; padding: 0 20px; backdrop-filter: none; }
   .main-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 62px; justify-content: space-around; gap: 0; border-top: 1px solid var(--line); background: rgba(255, 254, 250, .96); }
