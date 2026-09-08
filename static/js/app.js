@@ -181,6 +181,15 @@ let deletingPrizeId = null;
 let stopQuantityHold = () => {};
 let showAllPrizes = false;
 let showAllHistory = false;
+let historyUsed = false;
+for (const [selector, used] of [["#history-unused", false], ["#history-used", true]]) {
+  document.querySelector(selector).addEventListener("click", () => {
+    historyUsed = used;
+    showAllHistory = false;
+    renderPrizeHistory();
+    updatePrizeVisibility();
+  });
+}
 
 function updatePrizeVisibility() {
   const grid = document.querySelector("#prize-list");
@@ -312,31 +321,60 @@ function renderPrizes() {
     card.append(edit, title, priceRow, actions);
     list.append(card);
   });
+  renderPrizeHistory();
+  updatePrizeVisibility();
+}
+
+function renderPrizeHistory() {
+  for (const [selector, used] of [["#history-unused", false], ["#history-used", true]]) {
+    const count = state.exchanges.filter(exchange => Boolean(exchange.used) === used).length;
+    const filter = document.querySelector(selector);
+    filter.textContent = `${used ? "使用済み" : "未使用"}（${count}個）`;
+    filter.setAttribute("aria-pressed", String(historyUsed === used));
+  }
+  const groups = new Map();
+  state.exchanges.slice().reverse().forEach(exchange => {
+    if (Boolean(exchange.used) !== historyUsed) return;
+    const key = JSON.stringify([exchange.name, exchange.cost]);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(exchange);
+  });
   const history = document.querySelector("#prize-history");
   history.replaceChildren();
-  document.querySelector("#history-empty").hidden = state.exchanges.length > 0;
-  state.exchanges.slice().reverse().sort((a, b) => Number(a.used) - Number(b.used)).forEach(exchange => {
+  const empty = document.querySelector("#history-empty");
+  empty.hidden = groups.size > 0;
+  empty.textContent = historyUsed ? "使用済みのプライズはありません。" : "未使用のプライズはありません。プライズを交換するとここに表示されます。";
+  groups.forEach(exchanges => {
+    const exchange = exchanges[0];
     const item = document.createElement("li");
     item.className = `exchange-item ${exchange.used ? "exchange-used" : "exchange-unused"}`;
     const details = document.createElement("div");
     details.className = "exchange-details";
     const badge = document.createElement("strong");
     badge.className = "exchange-badge";
-    badge.textContent = exchange.used ? "✓ 使用済み" : "未使用 · これから楽しめる";
+    badge.textContent = `${historyUsed ? "✓ 使用済み" : "未使用"} ${exchanges.length}個`;
     const name = document.createElement("span");
-    name.textContent = `${exchange.name} · ${exchange.cost} pt · ${new Date(exchange.date).toLocaleDateString("ja-JP")}`;
+    name.textContent = exchange.name;
+    const meta = document.createElement("small");
+    meta.textContent = `1個 ${exchange.cost.toLocaleString()} pt · 最終交換 ${new Date(exchange.date).toLocaleDateString("ja-JP")}`;
     const button = document.createElement("button");
-    button.className = "button button-dark";
+    button.className = historyUsed ? "button button-outline" : "button button-dark";
     button.type = "button";
-    button.textContent = exchange.used ? "使用済み" : "使った";
-    button.disabled = exchange.used;
-    button.addEventListener("click", () => { exchange.used = true; saveState(); renderPrizes(); });
-    details.append(badge, name);
+    button.textContent = historyUsed ? "1個を未使用に戻す" : "1個使う";
+    button.setAttribute("aria-label", `${exchange.name}を${historyUsed ? "1個未使用に戻す" : "1個使う"}`);
+    button.addEventListener("click", () => {
+      const wasUsed = Boolean(exchange.used);
+      exchange.used = !wasUsed;
+      saveState();
+      renderPrizeHistory();
+      updatePrizeVisibility();
+      document.querySelector("#reward-status").textContent = `${exchange.name}を1個${wasUsed ? "未使用に戻しました" : "使用済みにしました"}。`;
+    });
+    details.append(badge, name, meta);
     item.append(details);
-    if (!exchange.used) item.append(button);
+    item.append(button);
     history.append(item);
   });
-  updatePrizeVisibility();
 }
 
 document.querySelector("#prize-form").addEventListener("submit", event => {

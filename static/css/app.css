@@ -63,6 +63,10 @@
 .exchange-unused { background: #edf7ee; border: 2px solid #96b69c; border-left-width: 7px; }
 .exchange-used { background: #eeede9; border-style: dashed; color: #666960; }
 .exchange-details { display: grid; gap: 10px; min-width: 0; }
+.exchange-details small { font-size: 11px; color: var(--muted); }
+.history-filters { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.history-filters button { padding: 10px 16px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; }
+.history-filters button[aria-pressed="true"] { color: var(--ink); background: var(--surface); box-shadow: 0 1px 5px #20231f12; font-weight: 700; }
 .exchange-badge { font-size: 12px; width: fit-content; padding: 5px 10px; border-radius: 99px; }
 .exchange-unused .exchange-badge { background: #32593d; color: white; }
 .exchange-used .exchange-badge { background: #deded7; color: #50534c; }
