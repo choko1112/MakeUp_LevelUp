@@ -161,6 +161,7 @@ function showView() {
   const route = ["#today", "#todos", "#journal", "#prizes"].includes(location.hash) ? location.hash : "#today";
   document.querySelector("#dashboard-view").hidden = route === "#prizes";
   document.querySelector("#prizes").hidden = route !== "#prizes";
+  updatePrizeVisibility();
   document.querySelectorAll(".main-nav a").forEach(link => {
     link.classList.toggle("active", link.hash === route);
     if (link.hash === route) link.setAttribute("aria-current", "page");
@@ -182,8 +183,11 @@ let showAllPrizes = false;
 let showAllHistory = false;
 
 function updatePrizeVisibility() {
+  const grid = document.querySelector("#prize-list");
+  // auto-fit includes collapsed 0px tracks; count them as available columns too.
+  const columns = getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(track => Number.isFinite(parseFloat(track))).length || 1;
   for (const [listId, buttonId, limit, expanded] of [
-    ["#prize-list", "#prizes-show-all", 6, showAllPrizes],
+    ["#prize-list", "#prizes-show-all", columns * 2, showAllPrizes],
     ["#prize-history", "#history-show-all", 5, showAllHistory],
   ]) {
     const items = document.querySelector(listId).children;
@@ -398,3 +402,22 @@ exchangeDialog.addEventListener("close", () => {
 window.addEventListener("hashchange", showView);
 renderPrizes();
 showView();
+
+// Observe width only: hiding rows also changes height and must not cause a loop.
+let prizeGridWidth = -1;
+const prizeGridObserver = new ResizeObserver(entries => {
+  const width = entries[0].contentRect.width;
+  if (width === prizeGridWidth) return;
+  prizeGridWidth = width;
+  stopQuantityHold();
+  updatePrizeVisibility();
+});
+prizeGridObserver.observe(document.querySelector("#prize-list"));
+
+const backToTop = document.querySelector("#back-to-top");
+function updateBackToTop() { backToTop.hidden = window.scrollY < 300; }
+window.addEventListener("scroll", updateBackToTop, { passive: true });
+backToTop.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+});
+updateBackToTop();

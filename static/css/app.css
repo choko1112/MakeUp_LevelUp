@@ -26,6 +26,9 @@
 .prize-panel { padding: 26px; margin-top: 22px; }
 .prize-panel h2 { font-size: 20px; margin-top: 0; }
 .show-all-button { display: block; margin: 22px auto 0; }
+.back-to-top { position: fixed; right: 18px; bottom: 22px; z-index: 9; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: #fffefaeb; color: #73766d; cursor: pointer; box-shadow: 0 2px 8px #20231f0a; }
+.back-to-top:hover, .back-to-top:focus-visible { color: var(--ink); border-color: var(--sage); background: var(--surface); }
+@media (max-width: 760px) { .back-to-top { right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); } }
 .prize-form { display: flex; align-items: end; gap: 14px; }
 .prize-form label { flex: 1; min-width: 0; font-size: 13px; }
 .prize-form input { display: block; height: 44px; border-radius: 10px; padding: 10px; margin-top: 8px; }
