@@ -3,6 +3,11 @@ name = "MakeUpLevelUp"
 version = "0.1.0"
 description = "A self-improvement dashboard built with FastAPI"
 requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.116.1",
+    "jinja2==3.1.6",
+    "uvicorn[standard]==0.35.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
