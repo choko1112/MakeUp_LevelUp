@@ -1,8 +1,10 @@
 (() => {
   const store = window.StepLogStore;
+  const difficultyPoints = { low: 10, medium: 30, high: 50 };
   let selected = new Date();
   let month = new Date(selected.getFullYear(), selected.getMonth(), 1);
   let days = {};
+  let rewards = { points: 0, prizes: [], exchanges: [] };
   const $ = (selector) => document.querySelector(selector);
   const hasRecord = (day) => Boolean(day && (day.focus || day.journal || day.todos.length));
 
@@ -28,6 +30,10 @@
       item.append(badge, text);
       $("#day-todos").append(item);
     });
+    const earned = day.todos.filter((todo) => todo.rewarded).reduce((sum, todo) => sum + (difficultyPoints[todo.difficulty] || 0), 0);
+    const spent = rewards.exchanges.filter((exchange) => store.dateKey(new Date(exchange.date)) === key).reduce((sum, exchange) => sum + exchange.cost, 0);
+    $("#day-points-earned").textContent = `${earned.toLocaleString()} pt`;
+    $("#day-points-spent").textContent = `${spent.toLocaleString()} pt`;
     $("#day-journal").textContent = day.journal || "活動日記の記録はありません。";
     $("#edit-today").hidden = key !== store.dateKey();
   }
@@ -73,6 +79,7 @@
   function refresh() {
     try {
       days = store.getDays();
+      rewards = store.getRewards();
       $("#calendar-error").hidden = true;
       renderMonth();
       renderDetails();
