@@ -58,7 +58,6 @@
           done: todo.done === true,
           difficulty: ["low", "medium", "high"].includes(todo.difficulty) ? todo.difficulty : "low",
           rewarded: todo.rewarded === true,
-          due: typeof todo.due === "string" && DATE_KEY_PATTERN.test(todo.due) ? todo.due : null,
         });
       });
     }
