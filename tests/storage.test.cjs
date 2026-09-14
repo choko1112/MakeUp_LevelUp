@@ -51,7 +51,7 @@ test('storage failure is not reported as a successful save', () => {
 test('daily rollover saves the outgoing journal and resets the dashboard', () => {
   const { store, context } = setup();
   const elements = new Map();
-  const element = () => ({ value: '', textContent: '', hidden: false, classList: { toggle() {} }, addEventListener() {}, setAttribute() {}, replaceChildren() {}, append() {}, focus() {} });
+  const element = () => ({ value: '', textContent: '', hidden: false, dataset: {}, classList: { toggle() {}, add() {}, remove() {} }, addEventListener() {}, setAttribute() {}, replaceChildren() {}, append() {}, focus() {}, querySelector: () => null, querySelectorAll: () => [] });
   context.document = { querySelector: key => { if (!elements.has(key)) elements.set(key, element()); return elements.get(key); }, createElement: element, addEventListener() {} };
   context.window = context;
   context.addEventListener = () => {};
