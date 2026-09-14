@@ -9,9 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}" />
-    <script src="{{ url_for('static', path='/js/storage.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/app.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/app.css') }}?v=20260914" />
+    <script src="{{ url_for('static', path='/js/storage.js') }}?v=20260914" defer></script>
+    <script src="{{ url_for('static', path='/js/app.js') }}?v=20260914" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">メインコンテンツへ</a>
@@ -38,6 +38,7 @@
           <input id="focus-input" maxlength="100" placeholder="例：Pythonのチュートリアルを30分進める" autocomplete="off" />
           <button class="button button-dark" type="submit">決める <span aria-hidden="true">→</span></button>
         </form>
+        <p id="focus-input-status" class="typing-status" role="status" hidden>入力中…</p>
         <div id="focus-result" class="focus-result" hidden>
           <button id="focus-check" class="round-check" type="button" aria-label="今日の目標を完了にする"></button>
           <div><span>今日の目標</span><strong id="focus-text"></strong></div>
@@ -49,6 +50,11 @@
         <section id="todos" class="panel todos-panel" aria-labelledby="todo-title">
           <div class="section-heading compact"><div class="heading-icon check-icon" aria-hidden="true">✓</div><div><p class="eyebrow">TASKS</p><h2 id="todo-title">TODO</h2></div><span id="todo-count" class="count-badge">0件</span></div>
           <form id="todo-form" class="inline-form"><label class="sr-only" for="todo-input">新しいTODO</label><input id="todo-input" maxlength="80" placeholder="やることを追加" autocomplete="off" /><button type="submit" aria-label="TODOを追加">＋</button></form>
+          <p id="todo-input-status" class="typing-status" role="status" hidden>入力中…</p>
+          <div class="todo-due-row">
+            <button type="button" id="todo-due-button" class="due-button" aria-haspopup="dialog">期限</button>
+            <input type="date" id="todo-due-input" class="sr-only" tabindex="-1" aria-hidden="true" />
+          </div>
           <fieldset class="difficulty"><legend>達成難易度</legend><p>自分にとっての取り組みの大変さで選びましょう。</p><label><input form="todo-form" type="radio" name="difficulty" value="low" checked />低 <small>10 pt</small></label><label><input form="todo-form" type="radio" name="difficulty" value="medium" />中 <small>30 pt</small></label><label><input form="todo-form" type="radio" name="difficulty" value="high" />高 <small>50 pt</small></label></fieldset>
           <p class="help-text">ポイントは初回の達成時に付与されます。完了を取り消しても再付与されません。</p>
           <ul id="todo-list" class="todo-list" aria-live="polite"></ul>
@@ -71,12 +77,12 @@
       <section id="prizes" hidden aria-labelledby="prizes-title">
         <div class="welcome"><div><p class="eyebrow">REWARDS</p><h1 id="prizes-title">頑張った自分に、ご褒美。</h1></div></div>
         <div class="panel balance-card"><span>使えるポイント</span><strong id="point-balance">0 pt</strong><p>TODOを達成して、楽しみにしていたプライズと交換しよう。</p></div>
-        <section class="panel prize-panel" aria-labelledby="prize-add-title"><h2 id="prize-add-title">プライズを登録</h2><form id="prize-form" class="prize-form"><label>プライズ名<input id="prize-name" maxlength="80" required placeholder="例：アイス1個" /></label><label>交換ポイント<input id="prize-cost" type="number" min="1" max="1000000" step="1" required placeholder="例：500" /></label><button class="button button-dark" type="submit">登録する</button></form><p class="help-text">1日50 ptなら、500 ptは約10日分の目安です。</p></section>
+        <section class="panel prize-panel" aria-labelledby="prize-add-title"><h2 id="prize-add-title">プライズを登録</h2><form id="prize-form" class="prize-form"><label>プライズ名<input id="prize-name" maxlength="80" required placeholder="例：アイス1個" /></label><label>交換ポイント<input id="prize-cost" type="number" min="1" max="1000000" step="1" required placeholder="例：500" /></label><button class="button button-dark" type="submit">登録する</button></form><p id="prize-form-status" class="typing-status" role="status" hidden>入力中…</p><p class="help-text">1日50 ptなら、500 ptは約10日分の目安です。</p></section>
         <section class="prize-panel" aria-labelledby="prize-list-title"><div class="prize-shop-heading"><h2 id="prize-list-title">交換できるプライズ</h2><div class="cart-controls"><button id="cart-checkout" class="button button-dark" type="button" disabled>まとめて交換</button><p id="cart-summary" class="help-text" role="status">0種類・0個 / 合計 0 pt</p></div></div><p id="prize-empty" class="help-text">楽しみにしたいご褒美を登録しましょう。</p><div id="prize-list" class="prize-grid"></div><button id="prizes-show-all" class="button button-outline show-all-button" type="button" aria-controls="prize-list" aria-expanded="false" hidden>すべて表示</button></section>
         <section class="panel prize-panel" aria-labelledby="history-title"><h2 id="history-title">交換したプライズ</h2><div class="history-filters" role="group" aria-label="プライズの使用状況"><button id="history-unused" type="button" aria-pressed="true" aria-controls="prize-history">未使用</button><button id="history-used" type="button" aria-pressed="false" aria-controls="prize-history">使用済み</button></div><p id="history-empty" class="help-text">未使用のプライズはありません。</p><ul id="prize-history" class="todo-list"></ul><button id="history-show-all" class="button button-outline show-all-button" type="button" aria-controls="prize-history" aria-expanded="false" hidden>すべて表示</button></section>
       </section>
       <p id="reward-status" role="status" class="help-text"></p>
-      <dialog id="prize-edit-dialog" aria-labelledby="prize-edit-title"><h2 id="prize-edit-title">プライズを編集</h2><p class="help-text">変更は次回の交換から適用されます。</p><form id="prize-edit-form" class="prize-edit-form"><label>プライズ名<input id="prize-edit-name" maxlength="80" required /></label><label>交換ポイント<input id="prize-edit-cost" type="number" min="1" max="1000000" step="1" required /></label><button id="prize-edit-delete" class="button button-danger" type="button">このプライズを削除</button><div class="dialog-actions"><button id="prize-edit-cancel" class="button button-outline" type="button">キャンセル</button><button class="button button-dark" type="submit">保存する</button></div></form></dialog>
+      <dialog id="prize-edit-dialog" aria-labelledby="prize-edit-title"><h2 id="prize-edit-title">プライズを編集</h2><p class="help-text">変更は次回の交換から適用されます。</p><form id="prize-edit-form" class="prize-edit-form"><label>プライズ名<input id="prize-edit-name" maxlength="80" required /></label><label>交換ポイント<input id="prize-edit-cost" type="number" min="1" max="1000000" step="1" required /></label><p id="prize-edit-status" class="typing-status" role="status" hidden>入力中…</p><button id="prize-edit-delete" class="button button-danger" type="button">このプライズを削除</button><div class="dialog-actions"><button id="prize-edit-cancel" class="button button-outline" type="button">キャンセル</button><button class="button button-dark" type="submit">保存する</button></div></form></dialog>
       <dialog id="exchange-dialog" aria-labelledby="exchange-title"><h2 id="exchange-title">プライズと交換</h2><p id="exchange-description"></p><form method="dialog" class="dialog-actions"><button class="button button-outline" value="cancel">キャンセル</button><button id="exchange-confirm" class="button button-dark" value="confirm">交換する</button></form></dialog>
       <dialog id="prize-delete-dialog" aria-labelledby="prize-delete-title" aria-describedby="prize-delete-description"><span class="delete-dialog-icon" aria-hidden="true">!</span><h2 id="prize-delete-title">プライズを削除しますか？</h2><p id="prize-delete-description"></p><form method="dialog" class="dialog-actions"><button class="button button-outline" value="cancel" autofocus>キャンセル</button><button class="button button-danger" value="delete">削除する</button></form></dialog>
     </main>

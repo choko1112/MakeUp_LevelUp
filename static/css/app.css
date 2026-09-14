@@ -95,6 +95,15 @@ input::placeholder, textarea::placeholder { color: #a4a69f; }
 .todo-item input { width: 18px; height: 18px; accent-color: var(--sage); }
 .todo-item.done label { color: var(--muted); text-decoration: line-through; }
 .delete-todo { border: 0; background: none; color: #9a9c95; cursor: pointer; font-size: 16px; }
+.drag-handle { display: inline-flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 3px; width: 16px; height: 16px; flex: 0 0 16px; cursor: grab; touch-action: none; }
+.drag-handle span { display: block; height: 2px; border-radius: 1px; background: #9a9c95; }
+.drag-handle:active { cursor: grabbing; }
+.todo-item.dragging { opacity: 0.45; }
+.todo-item.drag-over { border-top: 2px solid var(--sage); }
+.todo-due-row { display: flex; margin-top: 12px; }
+.due-button { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+.due-button:hover { background: white; }
+.due-button.due-set { color: #526549; background: var(--sage-soft); border-color: transparent; }
 .empty-state { display: grid; justify-items: center; padding: 35px 10px 21px; color: var(--muted); text-align: center; }
 .empty-state > span { display: grid; place-items: center; width: 42px; height: 42px; border: 1px dashed #b8bbb2; border-radius: 50%; color: #a8aaa3; font-size: 23px; }
 .empty-state p { margin: 12px 0 3px; color: var(--ink); font-size: 13px; font-weight: 600; }
@@ -114,6 +123,8 @@ footer p { margin: 0; }
 footer span { font-family: "DM Sans", sans-serif; font-style: normal; font-weight: 700; }
 
 .help-text { color: var(--muted); font-size: 12px; line-height: 1.7; }
+.typing-status { margin: 6px 0 0; color: var(--muted); font-size: 12px; font-style: italic; }
+.typing-dots { display: inline-block; min-width: 1.6em; text-align: left; }
 .difficulty { border: 0; padding: 0; margin: 18px 0 0; font-size: 13px; }
 .difficulty p { color: var(--muted); font-size: 11px; }
 .difficulty label { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; }
