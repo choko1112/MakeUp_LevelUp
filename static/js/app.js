@@ -64,7 +64,62 @@ const todoCount = document.querySelector("#todo-count");
 const journalInput = document.querySelector("#journal-input");
 const saveStatus = document.querySelector("#save-status");
 
+const typingDotTargets = new Set();
+let typingDotCount = 1;
+setInterval(() => {
+  if (!typingDotTargets.size) return;
+  typingDotCount = (typingDotCount % 3) + 1;
+  typingDotTargets.forEach((dots) => { dots.textContent = ".".repeat(typingDotCount); });
+}, 450);
+
+function hideTypingDots(statusEl) {
+  if (!statusEl) return;
+  statusEl.querySelectorAll(".typing-dots").forEach((dots) => typingDotTargets.delete(dots));
+}
+
+function showTyping(statusEl, label = "入力中") {
+  if (!statusEl) return;
+  statusEl.hidden = false;
+  statusEl.classList.remove("saved", "save-error");
+  statusEl.textContent = "";
+  const text = document.createElement("span");
+  text.textContent = label;
+  const dots = document.createElement("span");
+  dots.className = "typing-dots";
+  typingDotCount = 1;
+  dots.textContent = ".";
+  statusEl.append(text, dots);
+  typingDotTargets.add(dots);
+}
+
+function bindTypingIndicator(input, statusEl) {
+  if (!input || !statusEl) return () => {};
+  const hide = () => {
+    hideTypingDots(statusEl);
+    statusEl.hidden = true;
+  };
+  input.addEventListener("input", () => {
+    if (statusEl.hidden) showTyping(statusEl);
+  });
+  input.addEventListener("blur", hide);
+  return hide;
+}
+
+const hideFocusTyping = bindTypingIndicator(focusInput, document.querySelector("#focus-input-status"));
+const hideTodoTyping = bindTypingIndicator(todoInput, document.querySelector("#todo-input-status"));
+const prizeFormStatus = document.querySelector("#prize-form-status");
+const hidePrizeNameTyping = bindTypingIndicator(document.querySelector("#prize-name"), prizeFormStatus);
+const hidePrizeCostTyping = bindTypingIndicator(document.querySelector("#prize-cost"), prizeFormStatus);
+const prizeEditStatus = document.querySelector("#prize-edit-status");
+const hidePrizeEditNameTyping = bindTypingIndicator(document.querySelector("#prize-edit-name"), prizeEditStatus);
+const hidePrizeEditCostTyping = bindTypingIndicator(document.querySelector("#prize-edit-cost"), prizeEditStatus);
+function hidePrizeEditTyping() {
+  hidePrizeEditNameTyping();
+  hidePrizeEditCostTyping();
+}
+
 function setSaveStatus(text, saved = false, error = false) {
+  hideTypingDots(saveStatus);
   saveStatus.textContent = text;
   saveStatus.classList.toggle("saved", saved);
   saveStatus.classList.toggle("save-error", error);
@@ -128,11 +183,34 @@ function renderFocus() {
   focusCheck.setAttribute("aria-label", state.focusDone ? "今日の目標を未完了に戻す" : "今日の目標を完了にする");
 }
 
+function formatDue(value) {
+  if (typeof value !== "string" || !value) return null;
+  const [, month, day] = value.split("-").map(Number);
+  return `${month}/${day}`;
+}
+
 function renderTodos() {
   todoList.replaceChildren();
   state.todos.forEach((todo) => {
     const item = document.createElement("li");
     item.className = `todo-item${todo.done ? " done" : ""}`;
+    item.dataset.id = todo.id;
+    const handle = document.createElement("span");
+    handle.className = "drag-handle";
+    handle.setAttribute("draggable", "true");
+    handle.setAttribute("role", "img");
+    handle.setAttribute("aria-label", `${todo.text}をドラッグして並び替え`);
+    handle.append(document.createElement("span"), document.createElement("span"), document.createElement("span"));
+    handle.addEventListener("dragstart", (event) => {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", todo.id);
+      try { event.dataTransfer.setDragImage(item, 16, 16); } catch { /* not all browsers support setDragImage */ }
+      item.classList.add("dragging");
+    });
+    handle.addEventListener("dragend", () => {
+      item.classList.remove("dragging");
+      todoList.querySelectorAll(".todo-item.drag-over").forEach((el) => el.classList.remove("drag-over"));
+    });
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = todo.done;
@@ -150,7 +228,9 @@ function renderTodos() {
       renderRewards();
     });
     const label = document.createElement("label");
-    label.textContent = `${todo.text}（難易度：${difficulties[todo.difficulty].label}）`;
+    const labelParts = [todo.text, `（難易度：${difficulties[todo.difficulty].label}）`];
+    if (todo.due) labelParts.push(`期限（${formatDue(todo.due)}）`);
+    label.textContent = labelParts.join("　");
     const remove = document.createElement("button");
     remove.className = "delete-todo";
     remove.type = "button";
@@ -161,13 +241,47 @@ function renderTodos() {
       saveState();
       renderTodos();
     });
-    item.append(checkbox, label, remove);
+    item.append(handle, checkbox, label, remove);
     todoList.append(item);
   });
   todoEmpty.hidden = state.todos.length > 0;
   const remaining = state.todos.filter((todo) => !todo.done).length;
   todoCount.textContent = `${remaining}件`;
 }
+
+function getDragAfterElement(container, y) {
+  const items = [...container.querySelectorAll(".todo-item:not(.dragging)")];
+  return items.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+}
+
+todoList.addEventListener("dragover", (event) => {
+  if (!todoList.querySelector(".todo-item.dragging")) return;
+  event.preventDefault();
+  const afterElement = getDragAfterElement(todoList, event.clientY);
+  todoList.querySelectorAll(".todo-item.drag-over").forEach((el) => el.classList.remove("drag-over"));
+  if (afterElement) afterElement.classList.add("drag-over");
+});
+
+todoList.addEventListener("drop", (event) => {
+  const draggedId = event.dataTransfer.getData("text/plain");
+  if (!draggedId) return;
+  event.preventDefault();
+  todoList.querySelectorAll(".todo-item.drag-over").forEach((el) => el.classList.remove("drag-over"));
+  const fromIndex = state.todos.findIndex((todo) => todo.id === draggedId);
+  if (fromIndex === -1) return;
+  const afterElement = getDragAfterElement(todoList, event.clientY);
+  const [moved] = state.todos.splice(fromIndex, 1);
+  const afterId = afterElement ? afterElement.dataset.id : null;
+  const insertAt = afterId ? state.todos.findIndex((todo) => todo.id === afterId) : state.todos.length;
+  state.todos.splice(insertAt === -1 ? state.todos.length : insertAt, 0, moved);
+  saveState();
+  renderTodos();
+});
 
 function updateJournalCount() {
   document.querySelector("#character-count").textContent = `${journalInput.value.length} / 1000`;
@@ -214,6 +328,7 @@ focusForm.addEventListener("submit", (event) => {
   state.focus = value;
   state.focusDone = false;
   focusInput.value = "";
+  hideFocusTyping();
   saveState();
   renderFocus();
 });
@@ -233,22 +348,54 @@ document.querySelector("#focus-edit").addEventListener("click", () => {
   focusInput.focus();
 });
 
+const todoDueButton = document.querySelector("#todo-due-button");
+const todoDueInput = document.querySelector("#todo-due-input");
+
+function resetTodoDue() {
+  todoDueInput.value = "";
+  todoDueButton.textContent = "期限";
+  todoDueButton.classList.remove("due-set");
+}
+
+todoDueButton.addEventListener("click", () => {
+  if (typeof todoDueInput.showPicker === "function") todoDueInput.showPicker();
+  else todoDueInput.focus();
+});
+
+todoDueInput.addEventListener("change", () => {
+  const formatted = formatDue(todoDueInput.value);
+  todoDueButton.textContent = formatted || "期限";
+  todoDueButton.classList.toggle("due-set", Boolean(formatted));
+});
+
 todoForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const value = todoInput.value.trim();
   if (!value) return;
   const id = window.crypto && typeof window.crypto.randomUUID === "function" ? window.crypto.randomUUID() : `todo-${Date.now()}`;
   const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || "low";
-  state.todos.push({ id, text: value, done: false, difficulty, rewarded: false });
+  const due = todoDueInput.value || null;
+  state.todos.push({ id, text: value, done: false, difficulty, rewarded: false, due });
   todoInput.value = "";
+  hideTodoTyping();
+  resetTodoDue();
   saveState();
   renderTodos();
 });
 
+function updateJournalStatus() {
+  journalDirty = journalInput.value.trim() !== state.journal;
+  setSaveStatus(journalDirty ? "未保存" : state.journal ? "保存済み" : "未入力", !journalDirty && Boolean(state.journal));
+}
+
 journalInput.addEventListener("input", () => {
   updateJournalCount();
   journalDirty = journalInput.value.trim() !== state.journal;
-  setSaveStatus(journalDirty ? "未保存" : state.journal ? "保存済み" : "未入力", !journalDirty && Boolean(state.journal));
+  if (!saveStatus.querySelector(".typing-dots")) showTyping(saveStatus);
+});
+
+journalInput.addEventListener("blur", () => {
+  updateJournalStatus();
 });
 
 document.querySelector("#journal-save").addEventListener("click", () => {
@@ -274,6 +421,8 @@ document.querySelector("#prize-form").addEventListener("submit", event => {
   rewards.prizes.push({ id: createId("prize"), name, cost });
   saveRewards();
   event.target.reset();
+  hidePrizeNameTyping();
+  hidePrizeCostTyping();
   renderRewards();
 });
 
@@ -436,7 +585,10 @@ document.querySelector("#history-show-all").addEventListener("click", () => {
   showAllRewardHistory = !showAllRewardHistory;
   updateRewardVisibility();
 });
-document.querySelector("#prize-edit-cancel").addEventListener("click", () => document.querySelector("#prize-edit-dialog").close());
+document.querySelector("#prize-edit-cancel").addEventListener("click", () => {
+  hidePrizeEditTyping();
+  document.querySelector("#prize-edit-dialog").close();
+});
 document.querySelector("#prize-edit-form").addEventListener("submit", event => {
   event.preventDefault();
   const prize = rewards.prizes.find(item => item.id === rewardEditingId);
@@ -446,6 +598,7 @@ document.querySelector("#prize-edit-form").addEventListener("submit", event => {
   prize.name = name;
   prize.cost = cost;
   saveRewards();
+  hidePrizeEditTyping();
   document.querySelector("#prize-edit-dialog").close();
   renderRewards();
 });
